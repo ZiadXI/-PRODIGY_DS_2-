@@ -1,0 +1,78 @@
+
+
+library(readr)
+library(dplyr)
+library(ggplot2)
+
+# Load the Titanic dataset
+titanic <- read_csv("C:/Users/Wind/Downloads/Compressed/titanic/train.csv")
+
+# Handle missing values
+titanic$Age[is.na(titanic$Age)] <- median(titanic$Age, na.rm = TRUE)
+titanic$Embarked[is.na(titanic$Embarked)] <- 'S'
+titanic <- titanic %>% select(-Cabin)
+
+# Plot functions
+plot_survival_rate <- function() {
+  survival_rate <- titanic %>%
+    group_by(Survived) %>%
+    summarize(count = n())
+  
+  barplot(survival_rate$count, names.arg = survival_rate$Survived, 
+          col = c("red", "green"), main = "Survival Count", 
+          xlab = "Survived", ylab = "Count")
+}
+
+plot_age_distribution <- function() {
+  hist(titanic$Age, breaks = 20, col = "blue", 
+       main = "Age Distribution of Passengers", 
+       xlab = "Age", ylab = "Count")
+}
+
+plot_class_distribution <- function() {
+  class_count <- table(titanic$Pclass)
+  barplot(class_count, col = "blue", 
+          main = "Class Distribution of Passengers", 
+          xlab = "Class", ylab = "Count")
+}
+
+plot_survival_by_class <- function() {
+  survival_by_class <- titanic %>%
+    group_by(Pclass, Survived) %>%
+    summarize(count = n())
+  
+  survival_matrix <- xtabs(count ~ Pclass + Survived, data = survival_by_class)
+  barplot(survival_matrix, beside = TRUE, col = c("red", "green"), 
+          main = "Survival Count by Class", 
+          xlab = "Class", ylab = "Count", legend = rownames(survival_matrix))
+}
+
+plot_survival_by_age <- function() {
+  hist(titanic$Age[titanic$Survived == 1], breaks = 20, col = rgb(0,0,1,0.5), 
+       main = "Survival Count by Age", 
+       xlab = "Age", ylab = "Count")
+  hist(titanic$Age[titanic$Survived == 0], breaks = 20, col = rgb(1,0,0,0.5), add = TRUE)
+  legend("topright", legend = c("Survived", "Did not survive"), fill = c(rgb(0,0,1,0.5), rgb(1,0,0,0.5)))
+}
+
+plot_survival_by_gender <- function() {
+  survival_by_gender <- titanic %>%
+    group_by(Sex, Survived) %>%
+    summarize(count = n())
+  
+  survival_matrix <- xtabs(count ~ Sex + Survived, data = survival_by_gender)
+  barplot(survival_matrix, beside = TRUE, col = c("red", "green"), 
+          main = "Survival Count by Gender", 
+          xlab = "Gender", ylab = "Count", legend = rownames(survival_matrix))
+}
+
+# Set up the plot layout
+par(mfrow = c(3, 2), mar = c(4, 4, 2, 1))
+
+# Plot each graph
+plot_survival_rate()
+plot_age_distribution()
+plot_class_distribution()
+plot_survival_by_class()
+plot_survival_by_age()
+plot_survival_by_gender()
